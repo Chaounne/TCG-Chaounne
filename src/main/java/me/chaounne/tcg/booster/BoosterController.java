@@ -5,6 +5,8 @@ import me.chaounne.tcg.card.Card;
 import me.chaounne.tcg.card.CardService;
 import me.chaounne.tcg.card.repository.CardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,7 +45,7 @@ public class BoosterController {
     }
 
     @GetMapping(path = "/boosters/new")
-    public Booster getNewBooster() {
+    public ResponseEntity<Booster> getNewBooster() {
         List<Booster> boosters = boosterRepository.findAll();
         List<Card> allCards = cardRepository.findAll();
         List<Card> cards = new ArrayList<>();
@@ -79,6 +81,6 @@ public class BoosterController {
 
         boosterRepository.save(booster);
 
-        return booster;
+        return new ResponseEntity<>(booster, HttpStatus.CREATED);
     }
 }

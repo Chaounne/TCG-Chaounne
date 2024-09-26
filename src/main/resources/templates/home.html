@@ -11,6 +11,97 @@
 
     <h1>SITE EN CONSTRUCTION</h1>
 
+    <!-- bouton d'ouverture de booster -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#boosterModal">
+        Booster quotidien <br>
+        <img th:src="@{placeholder_booster.png}" alt="placeholder_booster" class="img-fluid shadow p-3 mb-5 bg-white rounded">
+    </button>
+
+    <!-- Modal (image booster "placeholder_booster.png") -->
+    <div class="modal fade" id="boosterModal" tabindex="-1" aria-labelledby="boosterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="boosterModalLabel">Booster quotidien</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div id="cardsCarousel" class="carousel slide" data-bs-ride="false">
+                        <div class="carousel-inner"></div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#cardsCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Précédent</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#cardsCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Suivant</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary">Valider</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<script>
+    document.querySelector('.btn-primary').addEventListener('click', function() {
+        fetch('/api/v1/boosters/new')  // Change cela pour correspondre à ton endpoint
+            .then(response => response.json())
+            .then(data => {
+                const carouselInner = document.querySelector('.carousel-inner');
+                carouselInner.innerHTML = ''; // Réinitialiser le contenu
+
+                // Vérifie si les cartes existent
+                if (data.cards && data.cards.length > 0) {
+                    data.cards.forEach((card, index) => {
+                        const isActive = index === 0 ? 'active' : '';
+                        carouselInner.innerHTML += `
+                            <div class="carousel-item ${isActive}">
+                                <img src="${card.image}" alt="${card.name}" class="d-block mx-auto" style="max-width: 200px;"> <!-- Réduit la taille de l'image -->
+                            </div>
+                        `;
+                    });
+
+                    // Ajoute un clic sur la dernière image et gère la navigation
+                    const lastCardIndex = data.cards.length - 1;
+                    const lastCard = carouselInner.lastElementChild;
+
+                    const showAllCards = () => {
+                        const allCardsHtml = data.cards.map(card => `
+                            <div class="col-6 mb-2">
+                                <img src="${card.image}" alt="${card.name}" class="d-block mx-auto" style="max-width: 200px;">
+                            </div>
+                        `).join('');
+                        document.querySelector('.modal-body').innerHTML = allCardsHtml; // Remplace le carousel par toutes les cartes
+                        document.querySelector('.modal-body').classList.add('cards'); // Ajoute une classe pour afficher les cartes en ligne
+                    };
+
+                    // Écoute les événements de clic sur la dernière carte
+                    lastCard.addEventListener('click', showAllCards);
+
+                    // Écoute les événements de changement de slide pour afficher toutes les cartes
+                    document.querySelector('#cardsCarousel').addEventListener('slid.bs.carousel', function () {
+                        const activeItem = document.querySelector('.carousel-item.active');
+                        const activeIndex = Array.from(carouselInner.children).indexOf(activeItem);
+                        if (activeIndex === lastCardIndex) {
+                            lastCard.addEventListener('click', showAllCards);
+                        } else {
+                            lastCard.removeEventListener('click', showAllCards);
+                        }
+                    });
+                } else {
+                    carouselInner.innerHTML = '<p>Aucune carte dans ce booster.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération des cartes :', error);
+            });
+    });
+</script>
 </body>
 </html>
